@@ -25,28 +25,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toPainter
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.window.LocalWindow
+import java.awt.Image
 import java.awt.Point
 import java.awt.Window
 import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.DataFlavor.selectBestTextFlavor
+import java.awt.datatransfer.Transferable
 import java.awt.dnd.DnDConstants
 import java.awt.dnd.DropTarget
 import java.awt.dnd.DropTargetDragEvent
 import java.awt.dnd.DropTargetDropEvent
 import java.awt.dnd.DropTargetEvent
 import java.awt.dnd.DropTargetListener
+import java.awt.image.BufferedImage
 import java.io.File
 
+sealed interface DropData {
+    data class FilesList(val rawUris: List<String>) : DropData
+
+    data class Image(val painter: Painter) : DropData
+
+    data class Text(val content: String, val mimeType: String?) : DropData
+}
+
 @Composable
-fun Modifier.onExternalFileDrag(
+fun Modifier.onExternalDrag(
     enabled: Boolean = true,
     onDragStart: () -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragCancel: () -> Unit = {},
-    onDrop: (List<File>) -> Unit = {},
+    onDrop: (DropData) -> Unit = {},
 ): Modifier = composed {
     if (!enabled) {
         return@composed Modifier
@@ -80,7 +94,7 @@ fun Modifier.onExternalFileDrag(
             }
 
             else -> {
-                error("Window already has unknown external dnd handler, cannot attach onExternalFileDrag")
+                error("Window already has unknown external dnd handler, cannot attach onExternalDrag")
             }
         }
 
@@ -205,7 +219,7 @@ private class AwtWindowDropTarget(
         onDragStart: () -> Unit,
         onDrag: (Offset) -> Unit,
         onDragCancel: () -> Unit,
-        onDrop: (List<File>) -> Unit
+        onDrop: (DropData) -> Unit
     ): Int {
         isActive = true
 
@@ -251,7 +265,7 @@ private class AwtWindowDropTarget(
         val onDragStart: () -> Unit,
         val onDrag: (Offset) -> Unit,
         val onDragCancel: () -> Unit,
-        val onDrop: (List<File>) -> Unit
+        val onDrop: (DropData) -> Unit
     )
 
     companion object {
@@ -272,7 +286,7 @@ private class AwtWindowDragTargetListener(
     private val onDragEnterWindow: (Point) -> Unit,
     private val onDragInsideWindow: (Point) -> Unit,
     private val onDragExit: () -> Unit,
-    private val onDrop: (List<File>) -> Boolean,
+    private val onDrop: (DropData) -> Boolean,
 ) : DropTargetListener {
     override fun dragEnter(dtde: DropTargetDragEvent) {
         onDragEnterWindow(dtde.location)
@@ -295,17 +309,56 @@ private class AwtWindowDragTargetListener(
 
         val transferable = dtde.transferable
         try {
-            val data = (transferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>) ?: run {
+            val dropData = transferable.dropData() ?: run {
                 onDragExit()
                 dtde.dropComplete(false)
                 return
             }
-            onDrop(data.filterIsInstance<File>())
+            onDrop(dropData)
             dtde.dropComplete(true)
             return
         } catch (e: Exception) {
             onDragExit()
             dtde.dropComplete(false)
         }
+    }
+
+    private fun Transferable.dropData(): DropData? {
+        val bestTextFlavor = selectBestTextFlavor(transferDataFlavors)
+
+        return when {
+            isDataFlavorSupported(DataFlavor.javaFileListFlavor) -> {
+                val files = getTransferData(DataFlavor.javaFileListFlavor) as? List<*> ?: return null
+                DropData.FilesList(files.filterIsInstance<File>().map { it.toURI().toString() })
+            }
+
+            isDataFlavorSupported(DataFlavor.imageFlavor) -> {
+                val image = getTransferData(DataFlavor.imageFlavor) as? Image ?: return null
+                DropData.Image(image.painter())
+            }
+
+            bestTextFlavor != null -> {
+                val reader = bestTextFlavor.getReaderForText(this) ?: return null
+                DropData.Text(content = reader.readText(), mimeType = bestTextFlavor.mimeType)
+            }
+
+            else -> null
+        }
+    }
+
+    private fun Image.painter(): Painter {
+        if (this is BufferedImage) {
+            return this.toPainter()
+        }
+        val bufferedImage = BufferedImage(getWidth(null), getHeight(null), BufferedImage.TYPE_INT_ARGB)
+
+        val g2 = bufferedImage.createGraphics()
+        try {
+            g2.drawImage(this, 0, 0, null)
+        } finally {
+            g2.dispose()
+        }
+
+        return bufferedImage.toPainter()
     }
 }

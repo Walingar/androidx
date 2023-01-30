@@ -16,6 +16,7 @@
 
 package androidx.compose.desktop.examples.dnd
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,8 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.dnd.onExternalFileDrag
+import androidx.compose.ui.dnd.DropData
+import androidx.compose.ui.dnd.onExternalDrag
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
 
@@ -42,6 +45,7 @@ fun main() = singleWindowApplication(
 
         var isDragging by remember { mutableStateOf(false) }
         var text by remember { mutableStateOf<String?>(null) }
+        var painter by remember { mutableStateOf<Painter?>(null) }
 
         Column(modifier = Modifier.padding(20.dp)) {
             Box(
@@ -53,7 +57,7 @@ fun main() = singleWindowApplication(
                             else -> Color.Red
                         }
                     )
-                    .onExternalFileDrag(
+                    .onExternalDrag(
                         onDragStart = {
                             isDragging = true
                         },
@@ -63,12 +67,19 @@ fun main() = singleWindowApplication(
                         onDrag = {
 
                         },
-                        onDrop = {
-                            text = it.toString()
+                        onDrop = { data ->
+                            text = data.toString()
+                            if (data is DropData.Image) {
+                                painter = data.painter
+                            }
                             isDragging = false
                         })
             ) {
-                Text(text ?: "Try to drag some files here", modifier = Modifier.align(Alignment.Center))
+                Text(text ?: "Try to drag some files or image here", modifier = Modifier.align(Alignment.Center))
+                val currentPainter = painter
+                if (currentPainter != null) {
+                    Image(currentPainter, contentDescription = "Pasted Image")
+                }
             }
         }
     }
