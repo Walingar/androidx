@@ -79,7 +79,7 @@ sealed interface DropData {
 @Composable
 fun Modifier.onExternalDrag(
     enabled: Boolean = true,
-    onDragStart: () -> Unit = {},
+    onDragStart: (Offset) -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragCancel: () -> Unit = {},
     onDrop: (DropData) -> Unit = {},
@@ -163,7 +163,7 @@ private class AwtWindowDropTarget(
                         val isInside =
                             isExternalDragInsideComponent(handler.componentCoordinates, newWindowDragCoordinates)
                         if (isInside) {
-                            handler.onDragStart()
+                            handler.onDragStart(calculateOffset(handler.componentCoordinates, newWindowDragCoordinates))
                         }
                     }
                     windowDragCoordinates = newWindowDragCoordinates
@@ -180,7 +180,7 @@ private class AwtWindowDropTarget(
                             isExternalDragInsideComponent(componentCoordinates, newWindowDragCoordinates)
 
                         if (!wasDragInside && newIsDragInside) {
-                            handler.onDragStart()
+                            handler.onDragStart(calculateOffset(componentCoordinates, newWindowDragCoordinates))
                         }
 
                         if (wasDragInside && !newIsDragInside) {
@@ -238,7 +238,7 @@ private class AwtWindowDropTarget(
      */
     fun installComponentDragHandler(
         componentCoordinates: LayoutCoordinates,
-        onDragStart: () -> Unit,
+        onDragStart: (Offset) -> Unit,
         onDrag: (Offset) -> Unit,
         onDragCancel: () -> Unit,
         onDrop: (DropData) -> Unit
@@ -248,7 +248,7 @@ private class AwtWindowDropTarget(
         handlers[idsCounter] = ComponentDragHandler(componentCoordinates, onDragStart, onDrag, onDragCancel, onDrop)
 
         if (isExternalDragInsideComponent(componentCoordinates, windowDragCoordinates)) {
-            onDragStart()
+            onDragStart(calculateOffset(componentCoordinates, windowDragCoordinates!!))
         }
         return idsCounter++
     }
@@ -284,7 +284,7 @@ private class AwtWindowDropTarget(
 
     private class ComponentDragHandler(
         val componentCoordinates: LayoutCoordinates,
-        val onDragStart: () -> Unit,
+        val onDragStart: (Offset) -> Unit,
         val onDrag: (Offset) -> Unit,
         val onDragCancel: () -> Unit,
         val onDrop: (DropData) -> Unit
@@ -300,6 +300,13 @@ private class AwtWindowDropTarget(
             }
 
             return componentCoordinates.boundsInWindow().contains(windowDragCoordinates)
+        }
+
+        private fun calculateOffset(
+            componentCoordinates: LayoutCoordinates,
+            windowDragCoordinates: Offset
+        ): Offset {
+            return componentCoordinates.windowToLocal(windowDragCoordinates)
         }
     }
 }
