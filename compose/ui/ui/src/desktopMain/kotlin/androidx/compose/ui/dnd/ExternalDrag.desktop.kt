@@ -46,14 +46,36 @@ import java.awt.dnd.DropTargetListener
 import java.awt.image.BufferedImage
 import java.io.File
 
+/**
+ * Represent data types drag and dropped to an application from outside.
+ */
 sealed interface DropData {
+    /**
+     * Represents list of files drag and dropped to an application in a raw [java.net.URI] format.
+     */
     data class FilesList(val rawUris: List<String>) : DropData
 
+    /**
+     * Represents an image drag and dropped to an application.
+     */
     data class Image(val painter: Painter) : DropData
 
+    /**
+     * Represent text drag and dropped to an application.
+     *
+     * @param mimeType mimeType of the [content] such as "text/plain", "text/html", etc.
+     */
     data class Text(val content: String, val mimeType: String?) : DropData
 }
 
+/**
+ * Adds detector of external drag and drop (e.g. files DnD from Finder to an application)
+ *
+ * @param onDragStart will be called when the pointer with external content entered the component.
+ * @param onDrag will be called for all drag events inside the component.
+ * @param onDrop is called when the pointer is released with [DropData] the pointer held.
+ * @param onDragCancel is called if the pointer exited the component bounds or unknown data was dropped.
+ */
 @Composable
 fun Modifier.onExternalDrag(
     enabled: Boolean = true,
