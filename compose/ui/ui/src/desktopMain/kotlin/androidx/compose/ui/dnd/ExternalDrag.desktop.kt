@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.window.LocalWindow
+import androidx.compose.ui.window.density
 import java.awt.Image
 import java.awt.Point
 import java.awt.Window
@@ -156,9 +157,9 @@ private class AwtWindowDropTarget(
     init {
         addDropTargetListener(
             AwtWindowDragTargetListener(
+                window,
                 // notify components on window border that drag is started.
-                onDragEnterWindow = { awtPoint ->
-                    val newWindowDragCoordinates = awtPoint.windowOffset()
+                onDragEnterWindow = { newWindowDragCoordinates ->
                     for ((_, handler) in handlers) {
                         val isInside =
                             isExternalDragInsideComponent(handler.componentCoordinates, newWindowDragCoordinates)
@@ -169,8 +170,7 @@ private class AwtWindowDropTarget(
                     windowDragCoordinates = newWindowDragCoordinates
                 },
                 // drag moved inside window, we should calculate whether drag entered/exited components or just moved inside them
-                onDragInsideWindow = { awtPoint ->
-                    val newWindowDragCoordinates = awtPoint.windowOffset()
+                onDragInsideWindow = { newWindowDragCoordinates ->
                     for ((_, handler) in handlers) {
                         val componentCoordinates = handler.componentCoordinates
                         val oldDragCoordinates = windowDragCoordinates
@@ -273,14 +273,6 @@ private class AwtWindowDropTarget(
         }
     }
 
-    private fun Point.windowOffset(): Offset {
-        val transform = window.graphicsConfiguration.defaultTransform
-        val offsetX = (x - window.insets.left) * transform.scaleX.toFloat()
-        val offsetY = (y - window.insets.top) * transform.scaleY.toFloat()
-
-        return Offset(offsetX, offsetY)
-    }
-
 
     private class ComponentDragHandler(
         val componentCoordinates: LayoutCoordinates,
@@ -312,17 +304,28 @@ private class AwtWindowDropTarget(
 }
 
 private class AwtWindowDragTargetListener(
-    private val onDragEnterWindow: (Point) -> Unit,
-    private val onDragInsideWindow: (Point) -> Unit,
+    private val window: Window,
+    private val onDragEnterWindow: (Offset) -> Unit,
+    private val onDragInsideWindow: (Offset) -> Unit,
     private val onDragExit: () -> Unit,
     private val onDrop: (DropData) -> Boolean,
 ) : DropTargetListener {
+    private val density = window.density.density
+
     override fun dragEnter(dtde: DropTargetDragEvent) {
-        onDragEnterWindow(dtde.location)
+        onDragEnterWindow(dtde.location.windowOffset())
     }
 
     override fun dragOver(dtde: DropTargetDragEvent) {
-        onDragInsideWindow(dtde.location)
+        onDragInsideWindow(dtde.location.windowOffset())
+    }
+
+    // takes title bar and other insets into account
+    private fun Point.windowOffset(): Offset {
+        val offsetX = (x - window.insets.left) * density
+        val offsetY = (y - window.insets.top) * density
+
+        return Offset(offsetX, offsetY)
     }
 
     override fun dropActionChanged(dtde: DropTargetDragEvent) {
