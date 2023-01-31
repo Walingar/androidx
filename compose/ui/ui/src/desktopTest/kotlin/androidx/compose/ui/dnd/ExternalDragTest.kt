@@ -1,0 +1,266 @@
+/*
+ * Copyright 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package androidx.compose.ui.dnd
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.dnd.ExternalDragTest.TestDragEvent.Drag
+import androidx.compose.ui.dnd.ExternalDragTest.TestDragEvent.DragCancelled
+import androidx.compose.ui.dnd.ExternalDragTest.TestDragEvent.DragStarted
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.density
+import androidx.compose.ui.window.launchApplication
+import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.runApplicationTest
+import com.google.common.truth.Truth.assertThat
+import java.awt.Window
+import org.junit.Test
+
+class ExternalDragTest {
+    @Test
+    fun `drag inside component that close to top left corner`() = runApplicationTest {
+        lateinit var window: ComposeWindow
+
+        val events = mutableListOf<TestDragEvent>()
+
+        launchApplication {
+            Window(
+                onCloseRequest = ::exitApplication,
+                state = rememberWindowState(width = 200.dp, height = 100.dp)
+            ) {
+                window = this.window
+
+                Column {
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                            .saveExternalDragEvents(events)
+                    )
+                }
+            }
+        }
+
+        awaitIdle()
+        assertThat(events.size).isEqualTo(0)
+
+        window.dragEvents {
+            onDragEnterWindow(Offset(50f, 50f))
+        }
+        awaitIdle()
+        assertThat(events.size).isEqualTo(1)
+        assertThat(events.last()).isEqualTo(DragStarted(Offset(50f, 50f)))
+
+        window.dragEvents {
+            onDragInsideWindow(Offset(70f, 70f))
+        }
+        awaitIdle()
+
+        assertThat(events.size).isEqualTo(2)
+        assertThat(events.last()).isEqualTo(Drag(Offset(70f, 70f)))
+
+        exitApplication()
+    }
+
+
+    @Test
+    fun `drag enters component that far from top left corner`() = runApplicationTest {
+        lateinit var window: ComposeWindow
+
+        val events = mutableListOf<TestDragEvent>()
+
+        launchApplication {
+            Window(
+                onCloseRequest = ::exitApplication,
+                state = rememberWindowState(width = 200.dp, height = 100.dp)
+            ) {
+                window = this.window
+                Column {
+                    Spacer(modifier = Modifier.height(height = 25.dp))
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                            .saveExternalDragEvents(events)
+                    )
+                }
+            }
+        }
+
+        awaitIdle()
+        val componentYOffset = with(window.density) {
+            25.dp.toPx()
+        }
+
+        assertThat(events.size).isEqualTo(0)
+
+        window.dragEvents {
+            onDragEnterWindow(Offset(10f, 10f))
+        }
+        awaitIdle()
+        assertThat(events.size).isEqualTo(0)
+
+        window.dragEvents {
+            onDragInsideWindow(Offset(70f, componentYOffset + 1f))
+        }
+        awaitIdle()
+
+        assertThat(events.size).isEqualTo(2)
+        assertThat(events[0]).isEqualTo(DragStarted(Offset(70f, 1f)))
+        assertThat(events[1]).isEqualTo(Drag(Offset(70f, 1f)))
+
+        exitApplication()
+    }
+
+    @Test
+    fun `multiple components`() = runApplicationTest {
+        lateinit var window: ComposeWindow
+
+        val eventsComponent1 = mutableListOf<TestDragEvent>()
+        val eventsComponent2 = mutableListOf<TestDragEvent>()
+
+        launchApplication {
+            Window(
+                onCloseRequest = ::exitApplication,
+                state = rememberWindowState(width = 400.dp, height = 400.dp)
+            ) {
+                window = this.window
+                Column {
+                    Box(
+                        modifier = Modifier.size(100.dp, 100.dp)
+                            .saveExternalDragEvents(eventsComponent1)
+                    )
+                    Box(
+                        modifier = Modifier.size(100.dp, 100.dp)
+                            .saveExternalDragEvents(eventsComponent2)
+                    )
+                }
+            }
+        }
+
+        awaitIdle()
+        val component2YOffset = with(window.density) {
+            100.dp.toPx()
+        }
+
+        assertThat(eventsComponent1.size).isEqualTo(0)
+        assertThat(eventsComponent2.size).isEqualTo(0)
+
+        window.dragEvents {
+            onDragEnterWindow(Offset(10f, 10f))
+        }
+        awaitIdle()
+        assertThat(eventsComponent1.size).isEqualTo(1)
+        assertThat(eventsComponent1.last()).isEqualTo(DragStarted(Offset(10f, 10f)))
+
+        assertThat(eventsComponent2.size).isEqualTo(0)
+
+        window.dragEvents {
+            onDragInsideWindow(Offset(70f, component2YOffset + 1f))
+        }
+        awaitIdle()
+
+        assertThat(eventsComponent1.size).isEqualTo(2)
+        assertThat(eventsComponent1.last()).isEqualTo(DragCancelled)
+
+        assertThat(eventsComponent2.size).isEqualTo(2)
+        assertThat(eventsComponent2[0]).isEqualTo(DragStarted(Offset(70f, 1f)))
+        assertThat(eventsComponent2[1]).isEqualTo(Drag(Offset(70f, 1f)))
+
+        val dropData = DropData.Text("Text", mimeType = "text/plain")
+        window.dragEvents {
+            onDrop(dropData)
+        }
+        awaitIdle()
+
+        assertThat(eventsComponent1.size).isEqualTo(2)
+
+        assertThat(eventsComponent2.size).isEqualTo(3)
+        assertThat(eventsComponent2.last()).isEqualTo(TestDragEvent.Drop(dropData))
+
+        exitApplication()
+    }
+
+    @Test
+    fun `stop dnd handling when there are no components`() = runApplicationTest {
+        lateinit var window: ComposeWindow
+
+        lateinit var componentIsVisible: MutableState<Boolean>
+
+        launchApplication {
+            Window(
+                onCloseRequest = ::exitApplication,
+                state = rememberWindowState(width = 400.dp, height = 400.dp)
+            ) {
+                window = this.window
+                Column {
+                    componentIsVisible = remember { mutableStateOf(true) }
+                    if (componentIsVisible.value) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().onExternalDrag()
+                        )
+                    }
+                }
+            }
+        }
+
+        awaitIdle()
+        assertThat(window.dropTarget.isActive).isEqualTo(true)
+
+        componentIsVisible.value = false
+        awaitIdle()
+        assertThat(window.dropTarget.isActive).isEqualTo(false)
+    }
+
+    private fun Window.dragEvents(eventsProvider: AwtWindowDragTargetListener.() -> Unit) {
+        val listener = (dropTarget as AwtWindowDropTarget).dragTargetListener
+        listener.eventsProvider()
+    }
+
+    @Composable
+    private fun Modifier.saveExternalDragEvents(events: MutableList<TestDragEvent>): Modifier {
+        return this.onExternalDrag(
+            onDragStart = {
+                events.add(DragStarted(it))
+            },
+            onDrop = {
+                events.add(TestDragEvent.Drop(it))
+            },
+            onDrag = {
+                events.add(Drag(it))
+            },
+            onDragCancel = {
+                events.add(DragCancelled)
+            }
+        )
+    }
+
+    private sealed interface TestDragEvent {
+        data class DragStarted(val offset: Offset) : TestDragEvent
+        object DragCancelled : TestDragEvent
+        data class Drag(val offset: Offset) : TestDragEvent
+        data class Drop(val data: DropData) : TestDragEvent
+    }
+}
