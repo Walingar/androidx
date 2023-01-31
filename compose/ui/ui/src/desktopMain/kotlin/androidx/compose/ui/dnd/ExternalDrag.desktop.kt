@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
@@ -50,6 +51,7 @@ import java.io.File
 /**
  * Represent data types drag and dropped to an application from outside.
  */
+@ExperimentalComposeUiApi
 sealed interface DropData {
     /**
      * Represents list of files drag and dropped to an application in a raw [java.net.URI] format.
@@ -77,6 +79,7 @@ sealed interface DropData {
  * @param onDrop is called when the pointer is released with [DropData] the pointer held.
  * @param onDragCancel is called if the pointer exited the component bounds or unknown data was dropped.
  */
+@ExperimentalComposeUiApi
 @Composable
 fun Modifier.onExternalDrag(
     enabled: Boolean = true,
@@ -145,6 +148,7 @@ fun Modifier.onExternalDrag(
  *
  * @VisibleForTesting
  */
+@OptIn(ExperimentalComposeUiApi::class)
 internal class AwtWindowDropTarget(
     private val window: Window
 ) : DropTarget(window, DnDConstants.ACTION_MOVE, null, true) {
@@ -326,6 +330,7 @@ internal class AwtWindowDropTarget(
 }
 
 // @VisibleForTesting
+@OptIn(ExperimentalComposeUiApi::class)
 internal class AwtWindowDragTargetListener(
     private val window: Window,
     val onDragEnterWindow: (Offset) -> Unit,

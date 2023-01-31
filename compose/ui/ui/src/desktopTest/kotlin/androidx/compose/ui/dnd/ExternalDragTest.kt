@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.dnd.ExternalDragTest.TestDragEvent.Drag
@@ -42,6 +43,7 @@ import com.google.common.truth.Truth.assertThat
 import java.awt.Window
 import org.junit.Test
 
+@OptIn(ExperimentalComposeUiApi::class)
 class ExternalDragTest {
     @Test
     fun `drag inside component that close to top left corner`() = runApplicationTest {
