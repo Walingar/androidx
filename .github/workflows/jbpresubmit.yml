@@ -65,13 +65,6 @@ jobs:
       affectedFileArgs: ${{ steps.affected-file-args.outputs.files }}
       java: ${{ steps.setup-java.outputs.path }}
     steps:
-      - name: Pull request format
-        if: ${{ false }} #
-        uses: 'androidx/check-pr-format-action@main'
-        with:
-          # Enforces a `Test: <stanza>` in the pull request
-          checks: '["(.*)?Test:(.*)?"]'
-
       - name: "Setup JDK 11"
         id: setup-java
         uses: actions/setup-java@v1
@@ -91,33 +84,6 @@ jobs:
           ref: ${{ needs.setup.outputs.checkout_ref }}
           repository: ${{ needs.setup.outputs.checkout_repo }}
           fetch-depth: 1
-
-      - name: "Get changed files in push or pull_request"
-        id: changed-files
-        uses: androidx/changed-files-action@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: "Warn on missing updateApi"
-        env:
-          ENABLE_UPDATEAPI_WARNING: ${{ true }}
-        run: |
-          set -x
-          ./development/apilint.py -f ${{ steps.changed-files.outputs.files }}
-
-      - name: "Parse changed-files as ktlint args"
-        id: ktlint-file-args
-        run: |
-          set -x
-          KTLINT_FILES=`echo "${{ steps.changed-files.outputs.files }}" | sed 's|[^ ]* *|--file=../&|g' | grep -v "*.txt"`
-          echo "::set-output name=ktlint-file-args::$KTLINT_FILES"
-
-      - name: "Parse changed-files as affected files args"
-        id: affected-file-args
-        run: |
-          set -x
-          AFFECTED_FILES=`echo "${{ steps.changed-files.outputs.files_including_removals }}" | sed 's|\([^ ]\+\)|--changedFilePath=\1|g'`
-          echo "::set-output name=files::$AFFECTED_FILES"
       - name: "warm up gradle"
         id: warm-up-gradle-cache
         uses: gradle/gradle-command-action@v1
