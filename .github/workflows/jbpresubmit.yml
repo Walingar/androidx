@@ -40,6 +40,11 @@ jobs:
           set -x
           echo "ANDROID_SDK_ROOT=$HOME/Library/Android/sdk" >> $GITHUB_ENV
           echo "DIST_DIR=$HOME/dist" >> $GITHUB_ENV
+      - name: "Install desktop emulation"
+        shell: bash
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :1 -screen 0 1920x1080x24 -extension RANDR &export DISPLAY=:1.0
 
       - uses: actions/checkout@v3
         with:
