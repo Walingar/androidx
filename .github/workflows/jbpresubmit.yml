@@ -88,30 +88,13 @@ jobs:
         with:
           java-version: "11"
 
-      - name: "checkout dependencies"
-        shell: bash
-        # checkout compose-jb repo containing scripts for running tests.
-        # note: this step also downloads Android sdk because we don't do full `repo sync` but
-        # install/checkout only what's needed for testing scripts.
-        run: |
-          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-              GITHUB_SHA=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)
-          fi
-          git clone -n https://github.com/JetBrains/compose-jb
-          cd compose-jb
-          git checkout origin/mpp
-          git submodule update --init --recursive
-
-          pushd compose/frameworks/support
-          git fetch
-          git checkout $GITHUB_SHA
-          git log -1 --oneline
-          popd
-
-          ./compose/scripts/downloadAndroidSdk
-
+      - uses: actions/checkout@v3
+        with:
+          repository: 'JetBrains/compose-jb'
+          submodules: 'recursive'
+          path: 'compose-jb'
+      - run: cd compose-jb/compose/frameworks/support
       - uses: gradle/gradle-build-action@v2
         with:
           gradle-version: release-candidate
-      - run: cd compose-jb/compose/frameworks/support
       - run: gradle compose:ui:desktopTest
