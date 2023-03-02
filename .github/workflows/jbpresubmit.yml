@@ -47,7 +47,7 @@ jobs:
           submodules: 'recursive'
           path: 'compose-jb'
 
-      - run: compose-jb/compose/scripts/downloadAndroidSdk
+      - run: compose-jb/compose/frameworks/support/jbdeps/android-sdk/downloadAndroidSdk
 
       - uses: gradle/gradle-build-action@v2
         with:
