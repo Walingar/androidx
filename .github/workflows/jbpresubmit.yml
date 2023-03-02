@@ -78,42 +78,6 @@ jobs:
           echo "ANDROID_SDK_ROOT=$HOME/Library/Android/sdk" >> $GITHUB_ENV
           echo "DIST_DIR=$HOME/dist" >> $GITHUB_ENV
 
-      - name: "Checkout androidx repo"
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.setup.outputs.checkout_ref }}
-          repository: ${{ needs.setup.outputs.checkout_repo }}
-          fetch-depth: 1
-      - name: "warm up gradle"
-        id: warm-up-gradle-cache
-        uses: gradle/gradle-command-action@v1
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
-          JAVA_TOOLS_JAR: ${{ steps.setup-tools-jar.outputs.toolsJar }}
-        with:
-          arguments: tasks -PandroidXUnusedParameter=compose-jb # add project name to cache key
-          build-root-directory: activity
-          configuration-cache-enabled: true
-          dependencies-cache-enabled: true
-          dependencies-cache-key: |
-            **/libs.versions.toml
-          dependencies-cache-exact: false
-          gradle-executable: activity/gradlew
-          wrapper-directory: activity/gradle/wrapper
-          distributions-cache-enabled: true
-      - name: "ktlint"
-        uses: gradle/gradle-command-action@v1
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
-        with:
-          arguments: -q :ktlintCheckFile ${{ steps.ktlint-file-args.outputs.ktlint-file-args }} ${{ needs.setup.outputs.gradlew_flags }}
-          build-root-directory: activity
-          configuration-cache-enabled: false
-          dependencies-cache-enabled: false
-          gradle-executable: activity/gradlew
-          wrapper-directory: activity/gradle/wrapper
-          distributions-cache-enabled: false
-
   tests:
     runs-on: ubuntu-latest
     needs: [ setup, lint ]
