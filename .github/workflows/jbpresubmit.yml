@@ -51,6 +51,6 @@ jobs:
 
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: compose:ui:desktopTest
+          arguments: testComposeModules
           gradle-version: release-candidate
-          build-root-directory: compose-jb/compose/frameworks/support
+          build-root-directory: compose-jb/compose/
