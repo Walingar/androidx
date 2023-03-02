@@ -41,13 +41,13 @@ jobs:
           echo "ANDROID_SDK_ROOT=$HOME/Library/Android/sdk" >> $GITHUB_ENV
           echo "DIST_DIR=$HOME/dist" >> $GITHUB_ENV
 
-      - run: compose-jb/compose/scripts/downloadAndroidSdk
-
       - uses: actions/checkout@v3
         with:
           repository: 'JetBrains/compose-jb'
           submodules: 'recursive'
           path: 'compose-jb'
+
+      - run: compose-jb/compose/scripts/downloadAndroidSdk
 
       - uses: gradle/gradle-build-action@v2
         with:
