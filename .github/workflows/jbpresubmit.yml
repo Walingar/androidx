@@ -52,5 +52,5 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           arguments: :support:compose:ui:ui:desktopTest
-          gradle-version: wrapper
+          gradle-version: 7.5.1
           build-root-directory: compose-jb/compose/
