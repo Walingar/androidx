@@ -93,8 +93,8 @@ jobs:
           repository: 'JetBrains/compose-jb'
           submodules: 'recursive'
           path: 'compose-jb'
-      - run: cd compose-jb/compose/frameworks/support
       - uses: gradle/gradle-build-action@v2
         with:
+          arguments: compose:ui:desktopTest
           gradle-version: release-candidate
-      - run: gradle compose:ui:desktopTest
+          build-root-directory: compose-jb/compose/frameworks/support
