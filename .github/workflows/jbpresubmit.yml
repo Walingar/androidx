@@ -59,3 +59,8 @@ jobs:
           arguments: testComposeJbDesktop
           gradle-version: 7.5.1
           build-root-directory: compose-jb/compose/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: gradle-test-results
+          path: compose-jb/compose/out/androidx/compose/ui/ui-text/build/reports/tests/desktopTest/index.html
