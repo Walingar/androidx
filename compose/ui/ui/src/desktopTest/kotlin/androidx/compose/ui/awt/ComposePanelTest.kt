@@ -95,6 +95,7 @@ class ComposePanelTest {
 
     @Test
     fun `a single layout pass at the window start`() {
+        assertThat(true).isEqualTo(false)
         assumeFalse(GraphicsEnvironment.getLocalGraphicsEnvironment().isHeadlessInstance)
 
         val layoutPassConstraints = mutableListOf<Constraints>()
