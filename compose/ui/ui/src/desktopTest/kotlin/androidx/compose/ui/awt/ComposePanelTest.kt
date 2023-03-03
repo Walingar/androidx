@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 The Android Open Source Project
+ * Copyright 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.assertThat
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.density
-import androidx.compose.ui.window.runApplicationTest
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.skiko.MainUIDispatcher
-import org.junit.Assume
-import org.junit.Test
 import java.awt.Dimension
 import java.awt.GraphicsEnvironment
 import javax.swing.JFrame
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.skiko.ExperimentalSkikoApi
 import org.jetbrains.skiko.GraphicsApi
+import org.jetbrains.skiko.MainUIDispatcher
 import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.SkiaLayerAnalytics
 import org.junit.Assume.assumeFalse
+import org.junit.Test
 
 class ComposePanelTest {
     @Test
     fun `don't override user preferred size`() {
+        assertThat(true).isEqualTo(false)
         assumeFalse(GraphicsEnvironment.getLocalGraphicsEnvironment().isHeadlessInstance)
 
         runBlocking(MainUIDispatcher) {
