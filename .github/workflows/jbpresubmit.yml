@@ -28,13 +28,32 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout repositories"
+      - name: "Clone androidx repo with proper HEAD"
         uses: actions/checkout@v3
         with:
-          repository: 'JetBrains/compose-jb'
-          submodules: 'recursive'
+          path: 'androidx'
+
+      - name: "Clone compose-jb repo without submodules"
+        uses: actions/checkout@v3
+        with:
           path: 'compose-jb'
 
+      - name: "Clone compose-jb submodules (except androidx) and setup project structure"
+        shell: bash
+        run: |
+          cd compose-jb
+          
+          # Clone all submodules except androidx (compose/frameworks/support) since it's already checked out by teamcity with the proper HEAD
+          git submodule | awk '{ print $2 }' | grep -v 'compose/frameworks/support' | xargs -L1 git submodule update --init --depth 1
+          
+          # Remove androidx (compose/frameworks/support) since we will move already checked out repo there
+          rm -rf compose/frameworks/support
+          
+          # Move checked out Compose Multiplatform androidx part to proper place
+          mv ../androidx compose/frameworks/support
+          
+          # Restore position
+          cd ..
       - name: "Setup JDK 11"
         id: setup-java
         uses: actions/setup-java@v1
