@@ -5,36 +5,6 @@ package androidx.compose.ui.graphics {
     method public static boolean isSupported(int);
   }
 
-  @kotlin.PublishedApi internal final class AndroidCanvas implements androidx.compose.ui.graphics.Canvas {
-    ctor public AndroidCanvas();
-    method public void clipPath(androidx.compose.ui.graphics.Path path, int clipOp);
-    method public void clipRect(float left, float top, float right, float bottom, int clipOp);
-    method public void concat(float[] matrix);
-    method public void disableZ();
-    method public void drawArc(float left, float top, float right, float bottom, float startAngle, float sweepAngle, boolean useCenter, androidx.compose.ui.graphics.Paint paint);
-    method public void drawCircle(long center, float radius, androidx.compose.ui.graphics.Paint paint);
-    method public void drawImage(androidx.compose.ui.graphics.ImageBitmap image, long topLeftOffset, androidx.compose.ui.graphics.Paint paint);
-    method public void drawImageRect(androidx.compose.ui.graphics.ImageBitmap image, long srcOffset, long srcSize, long dstOffset, long dstSize, androidx.compose.ui.graphics.Paint paint);
-    method public void drawLine(long p1, long p2, androidx.compose.ui.graphics.Paint paint);
-    method public void drawOval(float left, float top, float right, float bottom, androidx.compose.ui.graphics.Paint paint);
-    method public void drawPath(androidx.compose.ui.graphics.Path path, androidx.compose.ui.graphics.Paint paint);
-    method public void drawPoints(int pointMode, java.util.List<androidx.compose.ui.geometry.Offset> points, androidx.compose.ui.graphics.Paint paint);
-    method public void drawRawPoints(int pointMode, float[] points, androidx.compose.ui.graphics.Paint paint);
-    method public void drawRect(float left, float top, float right, float bottom, androidx.compose.ui.graphics.Paint paint);
-    method public void drawRoundRect(float left, float top, float right, float bottom, float radiusX, float radiusY, androidx.compose.ui.graphics.Paint paint);
-    method public void drawVertices(androidx.compose.ui.graphics.Vertices vertices, int blendMode, androidx.compose.ui.graphics.Paint paint);
-    method public void enableZ();
-    method public void restore();
-    method public void rotate(float degrees);
-    method public void save();
-    method public void saveLayer(androidx.compose.ui.geometry.Rect bounds, androidx.compose.ui.graphics.Paint paint);
-    method public void scale(float sx, float sy);
-    method public void skew(float sx, float sy);
-    method public android.graphics.Region.Op toRegionOp(int);
-    method public void translate(float dx, float dy);
-    field @kotlin.PublishedApi internal android.graphics.Canvas internalCanvas;
-  }
-
   public final class AndroidCanvas_androidKt {
     method public static androidx.compose.ui.graphics.Canvas Canvas(android.graphics.Canvas c);
     method public static android.graphics.Canvas getNativeCanvas(androidx.compose.ui.graphics.Canvas);
@@ -311,7 +281,6 @@ package androidx.compose.ui.graphics {
   public final class CanvasHolder {
     ctor public CanvasHolder();
     method public inline void drawInto(android.graphics.Canvas targetCanvas, kotlin.jvm.functions.Function1<? super androidx.compose.ui.graphics.Canvas,kotlin.Unit> block);
-    field @kotlin.PublishedApi internal final androidx.compose.ui.graphics.AndroidCanvas androidCanvas;
   }
 
   public final class CanvasKt {
@@ -435,8 +404,7 @@ package androidx.compose.ui.graphics {
     method public operator long invoke();
   }
 
-  public final class DegreesKt {
-    method @kotlin.PublishedApi internal static float degrees(float radians);
+  @kotlin.RequiresOptIn(message="This API is experimental and is likely to change in the future.") @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) public @interface ExperimentalGraphicsApi {
   }
 
   @androidx.compose.runtime.Immutable @kotlin.jvm.JvmInline public final value class FilterQuality {
@@ -1176,30 +1144,6 @@ package androidx.compose.ui.graphics.drawscope {
     property public androidx.compose.ui.graphics.drawscope.DrawContext drawContext;
     property public float fontScale;
     property public androidx.compose.ui.unit.LayoutDirection layoutDirection;
-    field @kotlin.PublishedApi internal final androidx.compose.ui.graphics.drawscope.CanvasDrawScope.DrawParams drawParams;
-  }
-
-  @kotlin.PublishedApi internal static final class CanvasDrawScope.DrawParams {
-    ctor public CanvasDrawScope.DrawParams(optional androidx.compose.ui.unit.Density density, optional androidx.compose.ui.unit.LayoutDirection layoutDirection, optional androidx.compose.ui.graphics.Canvas canvas, optional long size);
-    method public androidx.compose.ui.unit.Density component1();
-    method public androidx.compose.ui.unit.LayoutDirection component2();
-    method public androidx.compose.ui.graphics.Canvas component3();
-    method public long component4-NH-jbRc();
-    method internal boolean equals(Object? other);
-    method public androidx.compose.ui.graphics.Canvas getCanvas();
-    method public androidx.compose.ui.unit.Density getDensity();
-    method public androidx.compose.ui.unit.LayoutDirection getLayoutDirection();
-    method public long getSize();
-    method internal int hashCode();
-    method public void setCanvas(androidx.compose.ui.graphics.Canvas);
-    method public void setDensity(androidx.compose.ui.unit.Density);
-    method public void setLayoutDirection(androidx.compose.ui.unit.LayoutDirection);
-    method public void setSize(long);
-    method internal String toString();
-    property public final androidx.compose.ui.graphics.Canvas canvas;
-    property public final androidx.compose.ui.unit.Density density;
-    property public final androidx.compose.ui.unit.LayoutDirection layoutDirection;
-    property public final long size;
   }
 
   @kotlin.jvm.JvmDefaultWithCompatibility public interface ContentDrawScope extends androidx.compose.ui.graphics.drawscope.DrawScope {
